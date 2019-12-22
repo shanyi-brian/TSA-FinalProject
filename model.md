@@ -1,11 +1,12 @@
 1. ARIMA(1,1,1)
 $$
-	\nabla X_t = \alpha_1 \nabla X_{t-1}  + Z_t + \beta_1 Z_{t-1}
+	\nabla X_0 = Z_0 \qquad \nabla X_t = \alpha_1 \nabla X_{t-1}  + Z_t + \beta_1 Z_{t-1}, \forall t \geq 1
 $$
+Hence, $\nabla X_t - \alpha_1 \nabla X_{t-1} \sim N(0,1+\beta_1^2)$
 
-1. ARIMA(1,1,1)-GARCH(1,1)
+2. ARIMA(1,1,1)-GARCH(1,1)
 
-Let $P_t = \nabla^1 X_t$
+	Let $P_t = \nabla X_t$
 $$
 P_t = \kappa + \beta_1 P_{t-1} + a_t + \theta a_{t-1}
 $$
