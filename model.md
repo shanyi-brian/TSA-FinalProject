@@ -13,9 +13,9 @@ $$
 $$
 a_t = \sigma_t \varepsilon_t \qquad \qquad \sigma_t^2 = \alpha_0 + \alpha_1 a_{t-1}^2 + \alpha_2 \sigma_{t-1}^2
 $$
-Hence, $P_t - \kappa - \beta_1P_{t-1} \sim N(0, \sigma_t^2 + \theta^2 \sigma_{t-1}^2)$.
+Hence, $P_t - \kappa - \beta_1P_{t-1} -  \theta a_{t-1} \sim N(0, \sigma_t^2)$.
 
-3. Heston model
+1. Heston model
 $$
 dVIX_t  = \lambda (\mu  - VIX_t) * dt + \sigma \times \sqrt{VIX_t} * dW_t
 $$

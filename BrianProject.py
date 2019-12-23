@@ -8,7 +8,7 @@ from scipy.optimize import minimize
 from scipy.stats import norm
 # %%
 f = '/mnt/d/study/2019/2707_Time_Series_Analysis_Statistical_Arbitrage/project/mine/VIX.csv'
-data = pd.read_csv(f, index_col=0)
+data = pd.read_csv(f, index_col=0, parse_dates= True)
 data.head(5)
 # %%
 plt.plot(np.array(data['Close']))
@@ -100,15 +100,12 @@ def ARIMA111_GARCH11_lhdfn(Xt, params, a0 = None):
         for i in range(1,len(Xt)):
             sigmat_squared[i] = alpha0 + alpha1 * at[i-1]*at[i-1] + alpha2 * sigmat_squared[i-1]
             at[i] = errorSum[i-1] - theta * at[i-1]
-        vart = np.zeros(len(Xt) - 1)
-        for i in range(0,len(vart)):
-            vart[i] = sigmat_squared[i+1] + theta * theta * sigmat_squared[i]
-        return normal_lhdfn(errorSum,vart)
+        return normal_lhdfn(at,sigmat_squared)
 
 def ARIMA111_GARCH11(Xt):
     Xt = Xt[1:] - Xt[:-1]
     minimize_fn = lambda x: ARIMA111_GARCH11_lhdfn(Xt,x)
-    params = [np.mean(Xt),0.4, 0.4, np.std(Xt), 0.4,0.4,0.4]
+    params = [np.mean(Xt),0.4, 0.4, np.std(Xt), 0.1,0.1,0.1]
     res = minimize(minimize_fn, params, method = 'nelder-mead', 
             tol = 1e-8, options = {'disp': True, 'maxiter': 10000})
     print("Model trained finished")
@@ -148,6 +145,7 @@ def ARIMA111_GJRGARCH11_lhdfn(Xt, params, a0 = None):
             at[0] = errorSum[0]
         else:
             at[0] = a0
+        epsilon = at[0]/sigma
         sigmat_squared = np.zeros(len(Xt))
         sigmat_squared[0] = sigma * sigma
         for i in range(1,len(Xt)):
@@ -155,14 +153,11 @@ def ARIMA111_GJRGARCH11_lhdfn(Xt, params, a0 = None):
             if at[i-1] > 0:
                 sigmat_squared[i] += gamma1 * at[i-1] * at[i-1]
             at[i] = errorSum[i-1] - theta * at[i-1]
-        vart = np.zeros(len(Xt) - 1)
-        for i in range(0,len(vart)):
-            vart[i] = sigmat_squared[i+1] + theta * theta * sigmat_squared[i]
-        return normal_lhdfn(errorSum,vart)
+        return normal_lhdfn(at,sigmat_squared)
 
 def ARIMA111_GJRGARCH11(Xt):
     Xt = Xt[1:] - Xt[:-1]
-    params = [np.mean(Xt),0.4, 0.4, np.std(Xt), 0.4,0.4,0.4, 0.4]
+    params = [np.mean(Xt),0.4, 0.4, np.std(Xt), 0.1,0.1,0.1, 0.1]
     minimize_fn = lambda x: ARIMA111_GJRGARCH11_lhdfn(Xt,x)
     res = minimize(minimize_fn, params, method = 'nelder-mead', 
             tol = 1e-8, options = {'disp': True, 'maxiter': 10000})
@@ -254,34 +249,34 @@ ARIMA_val_AIC = ARIMA_AIC(np.array(close_val), md_ARIMA.params, order_ARIMA)
 print(ARIMA_train_AIC)
 print(ARIMA_val_AIC)
 #%%
-params, at = ARIMA111_GARCH11(np.array(close_train))
-ARIMAGARCH_train_AIC= ARIMA111_GARCH11_AIC(np.array(close_train), md_ARIMA.params, at)
-ARIMAGARCH_val_AIC = ARIMA111_GARCH11_AIC(np.array(close_val), params,at)
+params_ARIMAGARCH, at_ARIMAGARCH = ARIMA111_GARCH11(np.array(close_train))
+ARIMAGARCH_train_AIC= ARIMA111_GARCH11_AIC(np.array(close_train), params_ARIMAGARCH, at_ARIMAGARCH)
+ARIMAGARCH_val_AIC = ARIMA111_GARCH11_AIC(np.array(close_val), params_ARIMAGARCH,at_ARIMAGARCH)
 print(ARIMAGARCH_train_AIC)
 print(ARIMAGARCH_val_AIC)
 # %%
-params, at = ARIMA111_GJRGARCH11(np.array(close_train))
-ARIMAGJRGARCH_train_AIC = ARIMA111_GJRGARCH11_AIC(np.array(close_train), params,at)
-ARIMAGJRGARCH_error_AIC = ARIMA111_GJRGARCH11_AIC(np.array(close_val), params,at)
+params_GJRGARCH, at_GJRGARCH = ARIMA111_GJRGARCH11(np.array(close_train))
+ARIMAGJRGARCH_train_AIC = ARIMA111_GJRGARCH11_AIC(np.array(close_train), params_GJRGARCH,at_GJRGARCH)
+ARIMAGJRGARCH_error_AIC = ARIMA111_GJRGARCH11_AIC(np.array(close_val), params_GJRGARCH,at_GJRGARCH)
 print(ARIMAGJRGARCH_train_AIC)
 print(ARIMAGJRGARCH_error_AIC)
 
 # %%
-params = heston(np.array(close_train))
-heston_train_AIC = heston_AIC(np.array(close_train),params)
-heston_error_AIC = heston_AIC(np.array(close_val),params)
+params_heston = heston(np.array(close_train))
+heston_train_AIC = heston_AIC(np.array(close_train),params_heston)
+heston_error_AIC = heston_AIC(np.array(close_val),params_heston)
 print(heston_train_AIC)
 print(heston_error_AIC)
 
 #%%
-params = OU(np.array(close_train))
-OU_train_AIC =OU_AIC(np.array(close_train),params)
-OU_error_AIC = OU_AIC(np.array(close_val),params)
+params_OU = OU(np.array(close_train))
+OU_train_AIC =OU_AIC(np.array(close_train),params_OU)
+OU_error_AIC = OU_AIC(np.array(close_val),params_OU)
 print(OU_train_AIC)
 print(OU_error_AIC)
 # %%
 f_future = '/mnt/d/study/2019/2707_Time_Series_Analysis_Statistical_Arbitrage/project/mine/VIX_Future.csv'
-data_future = pd.read_csv(f_future, index_col=0)
+data_future = pd.read_csv(f_future, index_col=0, parse_dates = True)
 data_future.head(5)
 
 # def ARIMA_profit(p = 0.2):
@@ -301,4 +296,56 @@ data_future.head(5)
 #     data_future['ARIMA_return'] = ret 
 # ARIMA_profit()
 # %%
+def OU_profit(p = 0.2, days = 5, num_simulation = 10):
+    ret = []
+    mu_arr = []
+    std_arr = []
+    global data_future
+    def OU_prediction(X, params):
+        lam = params[0]
+        mu = params[1]
+        sigma = params[2]
+        lnXt = [np.log(X[0])]
+        for d in range(days):
+            nrandom = np.random.normal(size = num_simulation)
+            simu = []
+            for i in lnXt:
+                pred = lam * (mu - i) + sigma * nrandom + i
+                for j in pred:
+                    simu.append(j)
+            lnXt = simu
+        X_predict = np.exp(lnXt)
+        mu = np.mean(X_predict)
+        std = np.std(X_predict)
+        return (mu, std)
 
+    for date, row in data_future.iterrows(): 
+        t_date = close.index.get_loc(date)
+        params= OU(np.array(close[:t_date]))
+        mu, std = OU_prediction(close.iloc[t_date-1], params)
+        mu_arr.append(mu)
+        std_arr.append(std)
+        conf = [mu - p * std, mu + p * std]
+        settle_price = row['Settle']
+        maturity_settle_price = row['Maturity_Settle']
+        if settle_price < conf[0]:
+            profit = (maturity_settle_price - settle_price)/settle_price
+        elif settle_price > conf[1]:
+            profit = (settle_price - maturity_settle_price)/settle_price
+        else:
+            profit = 0
+        ret.append(profit)
+    data_future['OU_return'] = ret
+    data_future['OU_mu'] = mu_arr
+    data_future['OU_std']  = std_arr
+OU_profit(p = 0.2, days = 5, num_simulation = 20)
+
+# %%
+accumu_profit = 1
+for index,row in data_future.iterrows():
+    accumu_profit *= (1+ row['OU_return'])
+    
+
+
+
+# %%
