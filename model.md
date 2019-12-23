@@ -1,12 +1,12 @@
-1. ARIMA(1,1,1)
+1. ARIMA(p,d,q)
 $$
-	\nabla X_0 = Z_0 \qquad \nabla X_t = \alpha_1 \nabla X_{t-1}  + Z_t + \beta_1 Z_{t-1}, \forall t \geq 1
+	\nabla^d X_t = \alpha_1 \nabla^d X_{t-1} + \cdots + \alpha_p \nabla^d X_{t-p} + Z_t + \beta_1 Z_{t-1}+ \cdots + \beta_q Z_{t-q}
 $$
-Hence, $\nabla X_t - \alpha_1 \nabla X_{t-1} \sim N(0,1+\beta_1^2)$
+Hence, $\nabla^d X_t - \alpha_1 \nabla^d X_{t-1} + \cdots + \alpha_p \nabla^d X_{t-p} \sim N(0,1+\beta_1^2+ \cdots + \beta_q^2)$
 
 2. ARIMA(1,1,1)-GARCH(1,1)
 
-	Let $P_t = \nabla X_t$
+	Let $P_t = \nabla X_t, P_0 = \kappa + a_0$ where $a_0 = \sigma_0 \varepsilon_0$
 $$
 P_t = \kappa + \beta_1 P_{t-1} + a_t + \theta a_{t-1}
 $$
